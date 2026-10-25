@@ -7,10 +7,6 @@
   // ---------------------------------------------------------
   // ⚙️ 배포 전 설정값
   // ---------------------------------------------------------
-  // Google Apps Script 웹앱 배포 후 발급되는 URL을 여기에 넣으세요.
-  // (설정 방법: js/rsvp-apps-script.gs 및 함께 제공된 배포 안내 참고)
-  var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwFWD4Lz7bj4tGj_k3DpmSyFLiVaY67thazsoVjSiWlr6o2jbPfi73rqJWJ2oZs0zOzbg/exec"; // 예: "https://script.google.com/macros/s/xxxx/exec"
-
   // 카카오 디벨로퍼스에서 발급받은 JavaScript 키를 여기에 넣으면 지도가 표시됩니다.
   var KAKAO_MAP_APP_KEY = "78c51aaa6f628b3714df8311bcef1547"; // 예: "1234567890abcdef1234567890abcdef"
 
@@ -21,12 +17,6 @@
   // 정확한 위치는 initKakaoMap()에서 VENUE_ADDRESS를 실시간으로 지오코딩해서 구함.
   var VENUE_LAT = 37.5886;
   var VENUE_LNG = 126.9985;
-
-  var RECEPTION_DATETIME = new Date("2026-12-26T11:00:00+09:00");
-  var RECEPTION_VENUE_ADDRESS = "제주 제주시 선돌목동길 56-26";
-  // 지오코더 실패 시에만 쓰는 대략적인 제주시청 인근 폴백 좌표.
-  var RECEPTION_VENUE_LAT = 33.4996;
-  var RECEPTION_VENUE_LNG = 126.5312;
 
   var GALLERY_IMAGES = [
     "0.jpg", "1.jpg", "2.jpg", "3.jpg", "4.jpg", "5.jpg", "6.jpg",
@@ -39,12 +29,10 @@
     initIntroLoader();
     initReveal();
     initDday("dday", WEDDING_DATETIME);
-    initDday("reception-dday", RECEPTION_DATETIME);
     initContactModal();
     initAccountModal();
     initGallery();
     initKakaoMap();
-    initRsvpModal();
     initBgm();
   });
 
@@ -525,81 +513,5 @@
 
   function initKakaoMap() {
     renderKakaoMap("kakao-map", VENUE_ADDRESS, VENUE_LAT, VENUE_LNG);
-    renderKakaoMap("reception-kakao-map", RECEPTION_VENUE_ADDRESS, RECEPTION_VENUE_LAT, RECEPTION_VENUE_LNG);
-  }
-
-  // ---------------------------------------------------------
-  // RSVP 모달 + 전송
-  // ---------------------------------------------------------
-  function initRsvpModal() {
-    var openBtn = document.getElementById("open-rsvp");
-    var closeBtn = document.getElementById("close-rsvp");
-    var overlay = document.getElementById("rsvp-modal");
-    var form = document.getElementById("rsvp-form");
-    var msg = document.getElementById("rsvp-msg");
-    if (!openBtn || !overlay || !form) return;
-
-    openBtn.addEventListener("click", function () {
-      overlay.classList.add("is-open");
-    });
-    closeBtn.addEventListener("click", function () {
-      overlay.classList.remove("is-open");
-    });
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) overlay.classList.remove("is-open");
-    });
-
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-
-      if (!APPS_SCRIPT_URL) {
-        msg.classList.add("is-error");
-        msg.textContent = "관리자 설정이 완료되면 참석 의사 전달이 활성화됩니다.";
-        return;
-      }
-
-      var data = {
-        name: form.name.value.trim(),
-        side: form.side.value,
-        attend: form.attend.value,
-        count: form.count.value,
-        tel: form.tel.value.trim()
-      };
-
-      if (!data.name) {
-        msg.classList.add("is-error");
-        msg.textContent = "이름을 입력해주세요.";
-        return;
-      }
-
-      var submitBtn = form.querySelector(".rsvp-submit");
-      submitBtn.disabled = true;
-      msg.classList.remove("is-error");
-      msg.textContent = "전달 중...";
-
-      fetch(APPS_SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" }, // Apps Script CORS 단순 요청 유지용
-        body: JSON.stringify(data)
-      })
-        .then(function (res) { return res.json(); })
-        .then(function (result) {
-          if (result && result.ok) {
-            msg.classList.remove("is-error");
-            msg.textContent = "참석 의사가 전달되었습니다. 감사합니다.";
-            form.reset();
-            setTimeout(function () { overlay.classList.remove("is-open"); }, 1400);
-          } else {
-            throw new Error("응답 오류");
-          }
-        })
-        .catch(function () {
-          msg.classList.add("is-error");
-          msg.textContent = "전달에 실패했습니다. 잠시 후 다시 시도해주세요.";
-        })
-        .finally(function () {
-          submitBtn.disabled = false;
-        });
-    });
   }
 })();
