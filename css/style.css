@@ -692,6 +692,11 @@ html.intro-lock body{
 .gift-text{
   font-size: .92rem;
   color: var(--ink-soft);
+  margin-bottom: 14px;
+}
+.gift-note{
+  font-size: .8rem;
+  color: var(--ink-faint, var(--ink-soft));
   margin-bottom: 30px;
 }
 .account-item{
